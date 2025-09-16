@@ -51,42 +51,30 @@ public class DocumentService
     private Task<List<DocumentChunk>> ProcessPdfAsync(string pdfPath)
     {
         var chunks = new List<DocumentChunk>();
-        
-        try
-        {
-            using var pdfReader = new PdfReader(pdfPath);
-            using var pdfDocument = new PdfDocument(pdfReader);
-            
-            var fullText = ExtractTextFromPdf(pdfDocument);
-            
-            if (string.IsNullOrWhiteSpace(fullText))
-            {
-                return Task.FromResult(chunks);
-            }
 
-            var textChunks = SplitTextIntoChunks(fullText, ChunkSize, ChunkOverlap);
-            var fileName = Path.GetFileName(pdfPath);
+        var fullText = ExtractTextFromPdf(pdfPath);
 
-            for (int i = 0; i < textChunks.Count; i++)
-            {
-                chunks.Add(new DocumentChunk
-                {
-                    Id = $"{fileName}_chunk_{i}",
-                    Content = textChunks[i],
-                    SourceFile = fileName,
-                });
-            }
-        }
-        catch (Exception ex)
+        var textChunks = SplitTextIntoChunks(fullText, ChunkSize, ChunkOverlap);
+        var fileName = Path.GetFileName(pdfPath);
+
+        for (int i = 0; i < textChunks.Count; i++)
         {
-            Console.WriteLine($"Error processing PDF {pdfPath}: {ex.Message}");
+            chunks.Add(new DocumentChunk
+            {
+                Id = $"{fileName}_chunk_{i}",
+                Content = textChunks[i],
+                SourceFile = fileName,
+            });
         }
 
         return Task.FromResult(chunks);
     }
 
-    private string ExtractTextFromPdf(PdfDocument pdfDocument)
+    private string ExtractTextFromPdf(string pdfPath)
     {
+        using var pdfReader = new PdfReader(pdfPath);
+        using var pdfDocument = new PdfDocument(pdfReader);
+
         var text = new System.Text.StringBuilder();
         
         for (int pageNum = 1; pageNum <= pdfDocument.GetNumberOfPages(); pageNum++)
