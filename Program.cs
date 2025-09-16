@@ -24,7 +24,8 @@ configuration.GetSection("AzureOpenAI").Bind(azureOpenAIConfig);
 var aiService = new AIService(azureOpenAIConfig);
 var vectorDbService = new VectorDatabaseService(azureOpenAIConfig);
 var documentService = new DocumentService();
-var ragService = new RAGService(aiService, vectorDbService);
+var queryEnhancementService = new QueryEnhancementService(azureOpenAIConfig);
+var ragService = new RAGService(aiService, vectorDbService, queryEnhancementService);
 
 // Initialize and vectorize documents at startup
 await InitializeDocuments();
@@ -39,6 +40,7 @@ try
     Console.WriteLine("  - Type your message to chat with the AI (with RAG)");
     Console.WriteLine("  - Type '/chat <message>' for chat without RAG");
     Console.WriteLine("  - Type '/search <query>' to search documents only");
+    Console.WriteLine("  - Type '/analyze <query>' to see query analysis");
     Console.WriteLine("  - Type 'exit' to quit");
     Console.WriteLine();
 
@@ -70,6 +72,12 @@ try
                 // Search documents only
                 var searchQuery = userInput.Substring(8);
                 await HandleDocumentSearchAsync(searchQuery);
+            }
+            else if (userInput.StartsWith("/analyze ", StringComparison.OrdinalIgnoreCase))
+            {
+                // Analyze query
+                var analyzeQuery = userInput.Substring(9);
+                await HandleQueryAnalysisAsync(analyzeQuery);
             }
             else
             {
@@ -157,4 +165,18 @@ async Task HandleRAGChatAsync(string query)
         Console.Write(chunk);
     }
     Console.WriteLine("\n");
+}
+
+async Task HandleQueryAnalysisAsync(string query)
+{
+    Console.WriteLine("🔍 Analyzing query...");
+    
+    var analysis = await ragService.AnalyzeQueryAsync(query);
+    
+    Console.WriteLine($"📊 Query Analysis:");
+    Console.WriteLine($"   Type: {analysis.Type}");
+    Console.WriteLine($"   Rewritten: {analysis.RewrittenQuery}");
+    Console.WriteLine($"   Reasoning: {analysis.Reasoning}");
+
+    Console.WriteLine();
 }
