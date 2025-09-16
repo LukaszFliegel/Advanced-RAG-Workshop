@@ -23,7 +23,8 @@ configuration.GetSection("AzureOpenAI").Bind(azureOpenAIConfig);
 // instantiate services
 var aiService = new AIService(azureOpenAIConfig);
 var vectorDbService = new VectorDatabaseService(azureOpenAIConfig);
-var documentService = new DocumentService();
+var semanticChunkingService = new SemanticChunkingService(azureOpenAIConfig);
+var documentService = new DocumentService(semanticChunkingService);
 var queryEnhancementService = new QueryEnhancementService(azureOpenAIConfig);
 var ragService = new RAGService(aiService, vectorDbService, queryEnhancementService);
 
@@ -108,9 +109,9 @@ async Task InitializeDocuments()
     // Initialize vector database
     await vectorDbService.InitializeAsync();
 
-    // Process documents and add to vector database
+    // Process documents with semantic chunking and add to vector database
     var documentsPath = Path.Combine(Directory.GetCurrentDirectory(), "Documents");
-    var documents = await documentService.ProcessDocumentsAsync(documentsPath);
+    var documents = await documentService.ProcessDocumentsSemanticallyAsync(documentsPath);
 
     if (documents.Count > 0)
     {
@@ -147,7 +148,8 @@ async Task HandleDocumentSearchAsync(string query)
         var result = searchResults[i];
         Console.WriteLine($"📄 Result {i + 1} (Relevance: {result.Score:F2})");
         Console.WriteLine($"Source: {result.Record.SourceFile}");
-        Console.WriteLine($"Content: {result.Record.Content.Substring(0, 200)}");
+        var displayLength = Math.Min(200, result.Record.Content.Length);
+        Console.WriteLine($"Content: {result.Record.Content.Substring(0, displayLength)}");
         Console.WriteLine(new string('-', 50));
     }
     Console.WriteLine();

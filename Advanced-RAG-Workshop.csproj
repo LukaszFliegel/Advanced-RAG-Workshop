@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>Basic_RAG_Workshop</RootNamespace>
+    <RootNamespace>Advanced_RAG_Workshop</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <NoWarn>SKEXP0001;SKEXP0010;SKEXP0050;SKEXP0020;SKEXP0011</NoWarn>
