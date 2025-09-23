@@ -54,8 +54,6 @@ public class DocumentService
         return chunks;
     }
 
-    
-   
     private Task<List<DocumentChunk>> ProcessPdfAsync(string pdfPath)
     {
         var chunks = new List<DocumentChunk>();
