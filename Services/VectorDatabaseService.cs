@@ -37,7 +37,9 @@ public class VectorDatabaseService
 
     public async Task InitializeAsync()
     {
-        // Ensure the collection exists
+        // Since we have schema information available from the record definition
+        // it's possible to create a collection with the right vectors, dimensions,
+        // indexes and distance functions.
         await _collection.EnsureCollectionExistsAsync();
         Console.WriteLine("🧠 Vector database initialized with in-memory store");
     }
@@ -50,45 +52,33 @@ public class VectorDatabaseService
         }
 
         Console.WriteLine("🔄 Creating embeddings and storing in vector database...");
-        
+
         var tasks = new List<Task>();
-        var semaphore = new SemaphoreSlim(1024); // Limit concurrent requests
 
         foreach (var doc in documents)
         {
-            tasks.Add(ProcessDocumentAsync(doc, semaphore));
+            tasks.Add(ProcessDocumentAsync(doc));
         }
 
         await Task.WhenAll(tasks);
-        
+
         Console.WriteLine($"✅ Successfully stored {documents.Count} document chunks in vector database");
         return true;
     }
 
-    private async Task ProcessDocumentAsync(DocumentChunk doc, SemaphoreSlim semaphore)
+    private async Task ProcessDocumentAsync(DocumentChunk doc)
     {
-        await semaphore.WaitAsync();
-        try
-        {
-            // Generate embedding for the document content
-            var embedding = await _embeddingService.GenerateEmbeddingAsync(doc.Content);
-            
-            var record = new DocumentRecord
-            {
-                Id = doc.Id,
-                Content = doc.Content,
-                SourceFile = doc.SourceFile,
-                //ChunkIndex = doc.ChunkIndex,
-                //Description = $"Chunk {doc.ChunkIndex} from {doc.SourceFile}",
-                DescriptionEmbedding = embedding
-            };
+        var embedding = await _embeddingService.GenerateEmbeddingAsync(doc.Content);
 
-            await _collection.UpsertAsync(record);
-        }
-        finally
+        var record = new DocumentRecord
         {
-            semaphore.Release();
-        }
+            Id = doc.Id,
+            Content = doc.Content,
+            SourceFile = doc.SourceFile,
+            DescriptionEmbedding = embedding
+        };
+
+        await _collection.UpsertAsync(record);
     }
 
     public async Task<List<VectorSearchResult>> SearchAsync(string query, int limit = 5)
@@ -120,19 +110,5 @@ public class VectorDatabaseService
         }
 
         return results;
-    }
-
-    public async Task<int> GetDocumentCountAsync()
-    {
-        // For demonstration, we'll do a broad search to count all documents
-        try
-        {
-            var allResults = await SearchAsync("", int.MaxValue);
-            return allResults.Count;
-        }
-        catch
-        {
-            return 0;
-        }
     }
 }
