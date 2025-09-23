@@ -30,68 +30,61 @@ var ragService = new RAGService(aiService, vectorDbService);
 await InitializeDocuments();
 
 // Run the application
-try
+
+Console.WriteLine("🤖 Welcome to Advanced RAG Workshop Chat!");
+Console.WriteLine("This is a RAG application using Semantic Kernel and Azure OpenAI.");
+
+Console.WriteLine("\nCommands:");
+Console.WriteLine("  - Type your message to chat with the AI (with RAG)");
+Console.WriteLine("  - Type '/chat <message>' for chat without RAG");
+Console.WriteLine("  - Type '/search <query>' to search documents only");
+Console.WriteLine("  - Type 'exit' to quit");
+Console.WriteLine();
+
+while (true)
 {
-    Console.WriteLine("🤖 Welcome to Advanced RAG Workshop Chat!");
-    Console.WriteLine("This is a RAG application using Semantic Kernel and Azure OpenAI.");
+    // Display user prompt
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.Write("User: ");
+    Console.ResetColor();
 
-    Console.WriteLine("\nCommands:");
-    Console.WriteLine("  - Type your message to chat with the AI (with RAG)");
-    Console.WriteLine("  - Type '/chat <message>' for chat without RAG");
-    Console.WriteLine("  - Type '/search <query>' to search documents only");
-    Console.WriteLine("  - Type 'exit' to quit");
-    Console.WriteLine();
+    var userInput = Console.ReadLine();
 
-    while (true)
+    if (string.IsNullOrEmpty(userInput) || userInput.Equals("exit", StringComparison.OrdinalIgnoreCase))
     {
-        // Display user prompt
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write("User: ");
-        Console.ResetColor();
-
-        var userInput = Console.ReadLine();
-
-        if (string.IsNullOrEmpty(userInput) || userInput.Equals("exit", StringComparison.OrdinalIgnoreCase))
-        {
-            Console.WriteLine("👋 Goodbye!");
-            break;
-        }
-
-        try
-        {
-            if (userInput.StartsWith("/chat ", StringComparison.OrdinalIgnoreCase))
-            {
-                // Regular chat without RAG
-                var chatMessage = userInput.Substring(6);
-                await HandleRegularChatAsync(chatMessage);
-            }
-            else if (userInput.StartsWith("/search ", StringComparison.OrdinalIgnoreCase))
-            {
-                // Search documents only
-                var searchQuery = userInput.Substring(8);
-                await HandleDocumentSearchAsync(searchQuery);
-            }
-            else
-            {
-                // RAG-enhanced chat (default)
-                await HandleRAGChatAsync(userInput);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"❌ Error: {ex.Message}\n");
-            Console.ResetColor();
-        }
+        Console.WriteLine("👋 Goodbye!");
+        break;
     }
 
-    return 0;
+    try
+    {
+        if (userInput.StartsWith("/chat ", StringComparison.OrdinalIgnoreCase))
+        {
+            // Regular chat without RAG
+            var chatMessage = userInput.Substring(6);
+            await HandleRegularChatAsync(chatMessage);
+        }
+        else if (userInput.StartsWith("/search ", StringComparison.OrdinalIgnoreCase))
+        {
+            // Search documents only
+            var searchQuery = userInput.Substring(8);
+            await HandleDocumentSearchAsync(searchQuery);
+        }
+        else
+        {
+            // RAG-enhanced chat (default)
+            await HandleRAGChatAsync(userInput);
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"❌ Error: {ex.Message}\n");
+        Console.ResetColor();
+    }
 }
-catch (Exception ex)
-{
-    Console.WriteLine($"Application error: {ex.Message}");
-    return 1;
-}
+
+return 0;
 
 async Task InitializeDocuments()
 {
@@ -139,8 +132,7 @@ async Task HandleDocumentSearchAsync(string query)
         var result = searchResults[i];
         Console.WriteLine($"📄 Result {i + 1} (Relevance: {result.Score:F2})");
         Console.WriteLine($"Source: {result.Record.SourceFile}");
-        var displayLength = Math.Min(200, result.Record.Content.Length);
-        Console.WriteLine($"Content: {result.Record.Content.Substring(0, displayLength)}");
+        Console.WriteLine($"Content: {result.Record.Content.Substring(0, 200)}");
         Console.WriteLine(new string('-', 50));
     }
     Console.WriteLine();
