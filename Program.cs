@@ -139,7 +139,8 @@ async Task HandleDocumentSearchAsync(string query)
         var result = searchResults[i];
         Console.WriteLine($"📄 Result {i + 1} (Relevance: {result.Score:F2})");
         Console.WriteLine($"Source: {result.Record.SourceFile}");
-        Console.WriteLine($"Content: {result.Record.Content.Substring(0, 200)}");
+        var displayLength = Math.Min(200, result.Record.Content.Length);
+        Console.WriteLine($"Content: {result.Record.Content.Substring(0, displayLength)}");
         Console.WriteLine(new string('-', 50));
     }
     Console.WriteLine();
